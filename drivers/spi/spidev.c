@@ -30,11 +30,27 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/acpi.h>
+#include <linux/cdev.h>
 
 #include <linux/spi/spi.h>
 #include <linux/spi/spidev.h>
 
 #include <linux/uaccess.h>
+
+#define SPIDEVX_IOC_MAGIC    's'
+#define SPIDEVX_IOCINIT      _IOWR(SPIDEVX_IOC_MAGIC, 0, void *)
+#define SPIDEVX_IOCEXIT      _IOWR(SPIDEVX_IOC_MAGIC, 1, void *)
+
+
+struct spidevx_info_msg {
+    int max_speed_hz;
+    u16 mode;
+    u16 chip_select;
+};
+
+static int spidevx_major;
+static struct cdev spidevx_cdev;
+static struct class *spidevx_class;
 
 
 /*
@@ -692,52 +708,6 @@ static const struct file_operations spidev_fops = {
 
 static struct class *spidev_class;
 
-#ifdef CONFIG_OF
-static const struct of_device_id spidev_dt_ids[] = {
-	{ .compatible = "rohm,dh2228fv" },
-	{ .compatible = "lineartechnology,ltc2488" },
-	{},
-};
-MODULE_DEVICE_TABLE(of, spidev_dt_ids);
-#endif
-
-#ifdef CONFIG_ACPI
-
-/* Dummy SPI devices not to be used in production systems */
-#define SPIDEV_ACPI_DUMMY	1
-
-static const struct acpi_device_id spidev_acpi_ids[] = {
-	/*
-	 * The ACPI SPT000* devices are only meant for development and
-	 * testing. Systems used in production should have a proper ACPI
-	 * description of the connected peripheral and they should also use
-	 * a proper driver instead of poking directly to the SPI bus.
-	 */
-	{ "SPT0001", SPIDEV_ACPI_DUMMY },
-	{ "SPT0002", SPIDEV_ACPI_DUMMY },
-	{ "SPT0003", SPIDEV_ACPI_DUMMY },
-	{},
-};
-MODULE_DEVICE_TABLE(acpi, spidev_acpi_ids);
-
-static void spidev_probe_acpi(struct spi_device *spi)
-{
-	const struct acpi_device_id *id;
-
-	if (!has_acpi_companion(&spi->dev))
-		return;
-
-	id = acpi_match_device(spidev_acpi_ids, &spi->dev);
-	if (WARN_ON(!id))
-		return;
-
-	if (id->driver_data == SPIDEV_ACPI_DUMMY)
-		dev_warn(&spi->dev, "do not use this driver in production systems!\n");
-}
-#else
-static inline void spidev_probe_acpi(struct spi_device *spi) {}
-#endif
-
 /*-------------------------------------------------------------------------*/
 
 static int spidev_probe(struct spi_device *spi)
@@ -746,19 +716,14 @@ static int spidev_probe(struct spi_device *spi)
 	int			status;
 	unsigned long		minor;
 
+	//printk(KERN_INFO"%s OK.\n",__func__);	
+
 	/*
 	 * spidev should never be referenced in DT without a specific
 	 * compatible string, it is a Linux implementation thing
 	 * rather than a description of the hardware.
 	 */
-	if (spi->dev.of_node && !of_match_device(spidev_dt_ids, &spi->dev)) {
-		dev_err(&spi->dev, "buggy DT: spidev listed directly in DT\n");
-		WARN_ON(spi->dev.of_node &&
-			!of_match_device(spidev_dt_ids, &spi->dev));
-	}
-
-	spidev_probe_acpi(spi);
-
+	
 	/* Allocate driver data */
 	spidev = kzalloc(sizeof(*spidev), GFP_KERNEL);
 	if (!spidev)
@@ -783,6 +748,7 @@ static int spidev_probe(struct spi_device *spi)
 		dev = device_create(spidev_class, &spi->dev, spidev->devt,
 				    spidev, "spidev%d.%d",
 				    spi->master->bus_num, spi->chip_select);
+		
 		status = PTR_ERR_OR_ZERO(dev);
 	} else {
 		dev_dbg(&spi->dev, "no minor number available!\n");
@@ -808,6 +774,8 @@ static int spidev_remove(struct spi_device *spi)
 {
 	struct spidev_data	*spidev = spi_get_drvdata(spi);
 
+	//printk(KERN_INFO"%s OK.\n",__func__);	
+
 	/* make sure ops on existing fds can abort cleanly */
 	spin_lock_irq(&spidev->spi_lock);
 	spidev->spi = NULL;
@@ -828,8 +796,8 @@ static int spidev_remove(struct spi_device *spi)
 static struct spi_driver spidev_spi_driver = {
 	.driver = {
 		.name =		"spidev",
-		.of_match_table = of_match_ptr(spidev_dt_ids),
-		.acpi_match_table = ACPI_PTR(spidev_acpi_ids),
+		//.of_match_table = of_match_ptr(spidev_dt_ids),
+		//.acpi_match_table = ACPI_PTR(spidev_acpi_ids),
 	},
 	.probe =	spidev_probe,
 	.remove =	spidev_remove,
@@ -843,7 +811,7 @@ static struct spi_driver spidev_spi_driver = {
 
 /*-------------------------------------------------------------------------*/
 
-static int __init spidev_init(void)
+static int  spidev_init(void)
 {
 	int status;
 
@@ -869,17 +837,164 @@ static int __init spidev_init(void)
 	}
 	return status;
 }
-module_init(spidev_init);
+//module_init(spidev_init);
 
-static void __exit spidev_exit(void)
+static void  spidev_exit(void)
 {
+	//printk(KERN_INFO"%s OK.\n",__func__);	
+
 	spi_unregister_driver(&spidev_spi_driver);
 	class_destroy(spidev_class);
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);
-}
-module_exit(spidev_exit);
 
-MODULE_AUTHOR("Andrea Paterniani, <a.paterniani@swapp-eng.it>");
-MODULE_DESCRIPTION("User mode SPI device interface");
+}
+//module_exit(spidev_exit);
+
+
+/*--------------------------------add-----------------------------------*/
+
+static struct spi_board_info spi_slave_info[] = {
+	{
+		.modalias	   = "spidev",		
+		.bus_num	   = 1, 			 
+		.max_speed_hz  = 2000000,
+		.chip_select   = 0, 
+	},
+
+	{
+		.modalias	   = "spidev",		
+		.bus_num	   = 1, 			 
+		.max_speed_hz  = 2000000,
+		.chip_select   = 1, 
+	},	
+};
+
+static struct spi_device *add_device[2];
+
+static int spidevx_register(int chip_select)
+{
+	//dev
+	struct spi_master *master = NULL;
+	
+	master = spi_busnum_to_master(spi_slave_info->bus_num);
+	if (!master) 
+		return -EINVAL;
+	add_device[chip_select] = spi_new_device(master, &spi_slave_info[chip_select]);
+	if (!add_device[chip_select] )
+		return -EINVAL;
+
+	//drv
+	spidev_init();
+	
+	return 0;
+}
+
+static int spidevx_unregister(int chip_select)
+{
+	spi_unregister_device(add_device[chip_select]);
+	return 0;
+}
+
+
+static int spidevx_open(struct inode *inode, struct file *file) 
+{
+	return 0;
+}
+		
+static long  spidevx_ioctl (struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	int ret = 0;
+	struct spidevx_info_msg spi_info_msg;
+	
+	switch(cmd) {
+	case SPIDEVX_IOCINIT:
+		if (copy_from_user(&spi_info_msg, (struct spidevx_info_msg __user *)arg, sizeof(spi_info_msg)))
+		{
+			printk(KERN_ERR "SPIDEVX_IOCINIT: copy_from_user() fail.\n");
+			return -EINVAL;
+		}
+
+		//printk("spi_info_msg.chip_select=%d \n", spi_info_msg.chip_select);
+		spidevx_register(spi_info_msg.chip_select);
+		break;	
+	case SPIDEVX_IOCEXIT:
+		if (copy_from_user(&spi_info_msg, (struct spidevx_info_msg __user *)arg, sizeof(spi_info_msg)))
+		{
+			printk(KERN_ERR "SPIDEVX_IOCEXIT: copy_from_user() fail.\n");
+			return -EINVAL;
+		}
+
+		//printk("spi_info_msg.chip_select=%d \n", spi_info_msg.chip_select);
+		spidevx_unregister(spi_info_msg.chip_select);
+		break;
+	default:
+		ret = -ENOTTY;
+		break;
+	}
+	
+	return ret;
+}
+
+static int spidevx_release(struct inode *inode, struct file *file) 
+{
+	return 0;
+}
+
+static struct file_operations spidevx_fops = {
+	.owner = THIS_MODULE,
+    .open = spidevx_open,
+	.unlocked_ioctl = spidevx_ioctl,
+    .release = spidevx_release,
+};
+
+static int spidevx_drv_init(void)  
+{  
+  	int ret;
+	dev_t spidevx_devid;
+	
+	if(alloc_chrdev_region(&spidevx_devid, 0, 1, "spidevx") < 0)
+    {
+        printk(KERN_ERR"Unable to alloc_chrdev_region.\n");
+        return -EINVAL;
+    } 
+    spidevx_major = MAJOR(spidevx_devid);
+	cdev_init(&spidevx_cdev, &spidevx_fops);        
+    ret = cdev_add(&spidevx_cdev, spidevx_devid, 1);
+    if (ret < 0)
+    {
+        printk(KERN_ERR "Unable to cdev_add.\n");
+        goto error;
+    }
+        
+    spidevx_class = class_create(THIS_MODULE, "spidevx"); 
+    device_create(spidevx_class, NULL, MKDEV(spidevx_major, 0), NULL, "spidevx"); 
+
+	return 0;
+error:
+    unregister_chrdev_region(MKDEV(spidevx_major, 0), 1);
+    return -EINVAL;
+	
+}  
+  
+static void spidevx_drv_exit(void)  
+{  
+	device_destroy(spidevx_class,  MKDEV(spidevx_major, 0));
+    class_destroy(spidevx_class);
+ 
+    unregister_chrdev_region(MKDEV(spidevx_major, 0), 1);
+    cdev_del(&spidevx_cdev);
+
+	//spidev
+	//SPIDEVX_IOCEXIT
+	spidev_exit();
+}  
+
+module_init(spidevx_drv_init);
+module_exit(spidevx_drv_exit);
+
+
 MODULE_LICENSE("GPL");
-MODULE_ALIAS("spi:spidev");
+MODULE_AUTHOR("hceng <huangcheng.job@foxmail.com>");
+MODULE_DESCRIPTION("TI am335x board spidev driver.");
+MODULE_VERSION("v2.0");
+
