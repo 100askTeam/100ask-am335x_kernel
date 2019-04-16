@@ -17,7 +17,7 @@ obj-$(CONFIG_IR_XMP_DECODER) += ir-xmp-decoder.o
 
 
 obj-$(CONFIG_IRDA_NEC_MOD) += 100ask_irda.o
-obj-$(CONFIG_IIRDA_NEC_RC_MOD) += 100ask_rc-nec.o
+obj-$(CONFIG_IRDA_NEC_RC_MOD) += 100ask_rc-nec.o
 
 
 # stand-alone IR receivers/transmitters
