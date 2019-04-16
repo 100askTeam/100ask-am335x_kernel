@@ -729,7 +729,7 @@ config SPI_ZYNQMP_GQSPI
 #
 comment "SPI Protocol Masters"
 
-config CONFIG_SPI_DEV_USER
+config SPI_DEV_USER
         tristate "100ask spidev support"
         depends on SPI_TI_QSPI 
         help
