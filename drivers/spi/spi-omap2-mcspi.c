@@ -1274,7 +1274,8 @@ static bool omap2_mcspi_can_dma(struct spi_master *master,
 				struct spi_device *spi,
 				struct spi_transfer *xfer)
 {
-	return (xfer->len >= DMA_MIN_BYTES);
+	//return (xfer->len >= DMA_MIN_BYTES);
+	return ((xfer->len >= DMA_MIN_BYTES) && (xfer->rx_dma && xfer->tx_dma)); //hceng add for flash
 }
 
 static int omap2_mcspi_master_setup(struct omap2_mcspi *mcspi)

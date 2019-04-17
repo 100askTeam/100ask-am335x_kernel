@@ -729,6 +729,12 @@ config SPI_ZYNQMP_GQSPI
 #
 comment "SPI Protocol Masters"
 
+config SPI_DEV_USER
+        tristate "100ask spidev support"
+        depends on SPI_TI_QSPI 
+        help
+          This device supports single, Multiple chip selection.
+
 config SPI_SPIDEV
 	tristate "User mode SPI device driver support"
 	help
