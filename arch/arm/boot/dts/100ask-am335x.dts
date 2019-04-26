@@ -38,13 +38,77 @@
 		regulator-boot-on;
 	};
 
-	gpio_keys: volume_keys@0 {
-		compatible = "gpio-keys";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		autorepeat;		
-	};
+	leds {
+		pinctrl-names = "default";
+		pinctrl-0 = <&user_leds_s0>;
 
+		compatible = "gpio-leds";
+		
+		led1 {
+			label = "am335x:green:mmc0";
+			gpios = <&gpio1 16 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "mmc0";
+			default-state = "on";
+		};
+
+		led2 {
+			label = "am335x:green:cpu0";
+			gpios = <&gpio1 17 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "cpu0";
+			default-state = "on";
+		};
+		led3 {
+			label = "am335x:green:nand";
+			gpios = <&gpio1 19 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "nand-disk";
+			default-state = "on";
+		};
+
+		led4 {
+			label = "am335x:green:usr";
+			gpios = <&gpio1 21 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+	};
+	gpio_keypad: gpio_keyad@0{
+	    compatible = "gpio-keys";
+	    #address-cells = <1>;
+	    #size-cells = <0>;
+	    autorepeat;
+	    pinctrl-names = "default";
+		switch@1 {
+			label = "left";
+			linux,code = <105>;
+			gpios = <&gpio1 25 GPIO_ACTIVE_LOW>;
+			debounce-interval = <100>;
+			gpio-key,wakeup;
+		};
+	
+		switch@2 {
+			label = "right";
+			linux,code = <106>;
+			gpios = <&gpio1 24 GPIO_ACTIVE_LOW>;
+			debounce-interval = <100>;
+			gpio-key,wakeup;
+		};
+	
+		switch@3 {
+			label = "enter";
+			linux,code = <28>;
+			gpios = <&gpio1 23 GPIO_ACTIVE_LOW>;
+			debounce-interval = <100>;
+			gpio-key,wakeup;
+		};
+	
+		switch@4 {
+			label = "esc";
+			linux,code = <1>;
+			gpios = <&gpio1 22 GPIO_ACTIVE_LOW>;
+			debounce-interval = <100>;
+			gpio-key,wakeup;
+		};
+	}; 
 	backlight {
 		compatible = "pwm-backlight";
 		pwms = <&ecap0 0 50000 0>;
@@ -120,6 +184,23 @@
 
 &am33xx_pinmux {
 	pinctrl-names = "default";
+
+	user_leds_s0: user_leds_s0 {
+		pinctrl-single,pins = <
+			0x40(PIN_OUTPUT_PULLUP | MUX_MODE7) /* (R13) gpmc_a0.gpio1[16] */
+			0x44(PIN_OUTPUT_PULLUP | MUX_MODE7) /* (V14) gpmc_a1.gpio1[17] */
+			0x4c(PIN_OUTPUT_PULLUP | MUX_MODE7) /* (T14) gpmc_a3.gpio1[19] */
+			0x54(PIN_OUTPUT_PULLUP | MUX_MODE7) /* (V15) gpmc_a5.gpio1[21] */
+		>;
+	};
+	 gpio_key_pins: gpio_keys_s0 {
+                   pinctrl-single,pins = <
+                 0x58 (PIN_INPUT | MUX_MODE7) /* gpmc_a6.gpio1_22 */
+                 0x5C (PIN_INPUT | MUX_MODE7) /* gpmc_a7.gpio1_23 */
+                 0x60 (PIN_INPUT | MUX_MODE7) /* gpmc_a8.gpio1_24 */
+                 0x64 (PIN_INPUT | MUX_MODE7) /* gpmc_a9.gpio1_25 */
+             >;
+         };
 	
 	i2c0_pins: pinmux_i2c0_pins {
 		pinctrl-single,pins = <
