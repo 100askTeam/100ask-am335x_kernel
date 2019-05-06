@@ -6,6 +6,12 @@
 
 wm97xx-ts-y := wm97xx-core.o
 
+# Goodix GT1x Touch Driver
+
+obj-$(CONFIG_TOUCHSCREEN_GOODIX_GT1X) += gt1.o
+gt1-objs	+= gt1x.o gt1x_generic.o gt1x_extents.o gt1x_update.o gt1x_tools.o
+
+
 obj-$(CONFIG_TOUCHSCREEN_PROPERTIES)	+= of_touchscreen.o
 obj-$(CONFIG_TOUCHSCREEN_88PM860X)	+= 88pm860x-ts.o
 obj-$(CONFIG_TOUCHSCREEN_AD7877)	+= ad7877.o
