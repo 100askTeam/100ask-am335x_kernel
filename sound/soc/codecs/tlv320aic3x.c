@@ -1529,11 +1529,25 @@ static int aic3x_init(struct snd_soc_codec *codec)
 	snd_soc_update_bits(codec, HPRCOM_CTRL, UNMUTE, UNMUTE);
 
 	/* ADC default volume and unmute */
-	snd_soc_write(codec, LADC_VOL, DEFAULT_GAIN);
-	snd_soc_write(codec, RADC_VOL, DEFAULT_GAIN);
+
+	/*100ask li add */
+	/* -- snd_soc_write(codec, LADC_VOL, DEFAULT_GAIN); */
+	/* -- snd_soc_write(codec, RADC_VOL, DEFAULT_GAIN); */
+	snd_soc_write(codec, LADC_VOL, 0x37);/*bit 21 is 6 is10.5db ++ */
+	snd_soc_write(codec, RADC_VOL, 0x37);/* ++ */
+	snd_soc_write(codec, PGAR_2_LLOPM_VOL, 0x10); /* ++ */
+	/*100ask li add  end */
+
 	/* By default route Line1 to ADC PGA mixer */
 	snd_soc_write(codec, LINE1L_2_LADC_CTRL, 0x0);
 	snd_soc_write(codec, LINE1R_2_RADC_CTRL, 0x0);
+	/*100ask li add  */
+	snd_soc_write(codec, LINE2L_2_LADC_CTRL, 0x20);/* ++ */
+	snd_soc_write(codec, LINE2R_2_RADC_CTRL, 0x0);/* ++ */
+	snd_soc_write(codec, HPOUT_SC,     0x20);/* ++ */
+	aic3x_set_bias_level(codec, SND_SOC_BIAS_ON);/* ++ */
+	snd_soc_write(codec, MICBIAS_CTRL, 0x80);/* ++ */
+	/* 100ask li add end */
 
 	/* PGA to HP Bypass default volume, disconnect from Output Mixer */
 	snd_soc_write(codec, PGAL_2_HPLOUT_VOL, DEFAULT_VOL);
