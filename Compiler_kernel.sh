@@ -24,9 +24,9 @@ make modules  -j$CPU
 #step 6:Install kernel modules
 #make modules_install INSTALL_MOD_PATH=<your rootfs patch>
 
-echo -e "\033[31m zImage and 100ask-am335x.dtb directory \033[0m"
+echo -e "\033[32m zImage and 100ask-am335x.dtb directory \033[0m"
 
 ls arch/arm/boot/zImage -la
 ls arch/arm/boot/dts/100ask-am335x.dtb -la
 
-echo -e "\033[31m ------------------------------------- \033[0m"
+echo -e "\033[32m ------------------------------------- \033[0m"
