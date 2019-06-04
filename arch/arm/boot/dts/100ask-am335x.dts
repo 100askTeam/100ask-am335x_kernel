@@ -694,11 +694,11 @@
 		};
 		partition@9 {
 			label = "NAND.file-system";
-			reg = <0x00A00000 1F5FD800‬>;  
+			reg = <0x00A00000 0x1F5FD800>;  
 		};
         partition@10 {
 			label = "NAND.arduino-otg";
-			reg = <0x1FFFD800‬ 0x2800>;  
+			reg = <0x1FFFD800 0x2800>;  
 		};
 	};
 };
