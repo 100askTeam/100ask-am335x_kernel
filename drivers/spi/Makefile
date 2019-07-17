@@ -103,6 +103,6 @@ obj-$(CONFIG_SPI_XLP)			+= spi-xlp.o
 obj-$(CONFIG_SPI_XTENSA_XTFPGA)		+= spi-xtensa-xtfpga.o
 obj-$(CONFIG_SPI_ZYNQMP_GQSPI)		+= spi-zynqmp-gqspi.o
 #100ask  spidev  lib
-obj-$(CONFIG_SPI_DEV_USER)		+= spidev.o
+obj-$(CONFIG_SPI_DEV_USER)		+= 100ask_spidev.o
 
 

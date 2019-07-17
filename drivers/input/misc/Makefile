@@ -14,7 +14,7 @@ obj-$(CONFIG_INPUT_ADXL34X)		+= adxl34x.o
 obj-$(CONFIG_INPUT_ADXL34X_I2C)		+= adxl34x-i2c.o
 obj-$(CONFIG_INPUT_ADXL34X_SPI)		+= adxl34x-spi.o
 #100ask add 
-obj-$(CONFIG_INPUT_ADXL34X_MOD)         += 100ask_adxl34x-spi.o
+obj-$(CONFIG_INPUT_ADXL34X_MOD)         += 100ask_adxl345-spi.o
 
 obj-$(CONFIG_INPUT_APANEL)		+= apanel.o
 obj-$(CONFIG_INPUT_ARIZONA_HAPTICS)	+= arizona-haptics.o

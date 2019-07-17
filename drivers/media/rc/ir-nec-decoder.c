@@ -184,9 +184,9 @@ static int ir_nec_decode(struct rc_dev *dev, struct ir_raw_event ev)
 			/* Normal NEC */
 			scancode = address << 8 | command;
 			/*100ask modify */
-			//--IR_dprintk(1, "NEC scancode 0x%04x\n", scancode);
-			//--rc_type = RC_TYPE_NEC;
-			printk("NEC scancode 0x%04x\n", scancode); /*++ */
+			IR_dprintk(1, "NEC scancode 0x%04x\n", scancode);
+			rc_type = RC_TYPE_NEC;
+			//printk("NEC scancode 0x%04x\n", scancode); /*++ */
 		}
 
 		if (data->is_nec_x)
